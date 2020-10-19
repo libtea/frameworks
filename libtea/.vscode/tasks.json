@@ -1,0 +1,150 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Configure library header with Powershell script",
+			"command": "powershell -ExecutionPolicy Bypass ./make_header.ps1",
+			"args": [],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"type": "shell",
+			"label": "Build object file for Windows ASM",
+			"command": "ml64 /c src/arch/x86/asm/libtea_windows_timing.S /Fo libtea_windows_timing.obj",
+			"args": [],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"type": "shell",
+			"label": "Compile library (basic) with cl.exe",
+			"command": "cl.exe",
+			"args": [
+				"/GL",
+				"/Zi",
+				"/Fe:",
+				"tests/test-basic.exe",
+				"tests/test-basic.c",
+				"libtea_windows_timing.obj",
+				"/link",
+				"/subsystem:console",
+				"/machine:x64",
+				"/entry:mainCRTStartup"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "Compile library (cache) with cl.exe",
+			"command": "cl.exe",
+			"args": [
+				"/GL",
+				"/Fe:",
+				"tests/test-cache.exe",
+				"tests/test-cache.c",
+				"libtea_windows_timing.obj",
+				"/link",
+				"/subsystem:console",
+				"/machine:x64",
+				"/entry:mainCRTStartup"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "Compile library (paging) with cl.exe",
+			"command": "cl.exe",
+			"args": [
+				"/GL",
+				"/Fe:",
+				"tests/utest-paging/utest-paging.exe",
+				"tests/utest-paging/utest-paging.c",
+				"libtea_windows_timing.obj",
+				"/link",
+				"/subsystem:console",
+				"/machine:x64",
+				"/entry:mainCRTStartup"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "Compile Libtea driver with MSBuild",
+			"command": "msbuild.exe",
+			"args": [
+				"/t:clean",
+				"/t:build",
+				"./driver/Libtea/Libtea.vcxproj",
+				"/p:Configuration=Debug",
+				"/p:Platform=x64"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"label": "Compile Libtea driver loader with MSBuild",
+			"command": "msbuild.exe",
+			"args": [
+				"/t:clean",
+				"/t:build",
+				"./driver/LibteaLoader/LibteaLoader.vcxproj",
+				"/p:Configuration=Debug",
+				"/p:Platform=x64"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+	]
+}

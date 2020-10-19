@@ -1,0 +1,12 @@
+tests/test-basic
+tests/test-cache
+tests/test-paging
+*.symvers
+*.ko
+*.mod
+*.mod.c
+*.mod.o
+*.o
+*.order
+*.cmd
+*.exe

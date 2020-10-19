@@ -1,0 +1,8 @@
+# Build only the JS shell (comment out to build the entire browser)
+ac_add_options --enable-application=js
+
+# Enable debug-only functions
+ac_add_options --enable-debug
+
+# Disable optimization for easier debugging
+ac_add_options --disable-optimize

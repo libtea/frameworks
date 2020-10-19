@@ -1,0 +1,86 @@
+;
+; Libtea.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ;
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ;
+Provider=%ManufacturerName%
+CatalogFile=Libtea.cat
+DriverVer= ;
+
+[DestinationDirs]
+DefaultDestDir = 12
+Libtea_Device_CoInstaller_CopyFiles = 11
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+Libtea.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ;
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%Libtea.DeviceDesc%=Libtea_Device, Root\Libtea ;
+
+[Libtea_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+Libtea.sys
+
+;-------------- Service installation
+[Libtea_Device.NT.Services]
+AddService = Libtea,%SPSVCINST_ASSOCSERVICE%, Libtea_Service_Inst
+
+; -------------- Libtea driver install sections
+[Libtea_Service_Inst]
+DisplayName    = %Libtea.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\Libtea.sys
+
+;
+;--- Libtea_Device Coinstaller installation ------
+;
+
+[Libtea_Device.NT.CoInstallers]
+AddReg=Libtea_Device_CoInstaller_AddReg
+CopyFiles=Libtea_Device_CoInstaller_CopyFiles
+
+[Libtea_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[Libtea_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[Libtea_Device.NT.Wdf]
+KmdfService =  Libtea, Libtea_wdfsect
+[Libtea_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="Anon"
+ClassName="Samples" ;
+DiskName = "Libtea Installation Disk"
+Libtea.DeviceDesc = "Libtea Device"
+Libtea.SVCDESC = "Libtea Service"

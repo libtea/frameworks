@@ -1,0 +1,6 @@
+[submodule "libtea/module/intel-sdk/linux-sgx"]
+	path = libtea/module/intel-sdk/linux-sgx
+	url = https://github.com/intel/linux-sgx.git
+[submodule "libtea/module/linux-sgx-driver"]
+	path = libtea/module/linux-sgx-driver
+	url = https://github.com/intel/linux-sgx-driver.git

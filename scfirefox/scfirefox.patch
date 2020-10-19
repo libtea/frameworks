@@ -1,0 +1,73 @@
+diff -r 16915d90a511 js/public/ProtoKey.h
+--- a/js/public/ProtoKey.h	Sat May 29 05:05:39 2021 +0000
++++ b/js/public/ProtoKey.h	Sat May 29 12:57:21 2021 +0200
+@@ -126,7 +126,8 @@
+   REAL(FinalizationRegistry, OCLASP(FinalizationRegistry))                    \
+   REAL(WeakRef, OCLASP(WeakRef))                                              \
+   REAL(Iterator, OCLASP(Iterator))                                            \
+-  REAL(AsyncIterator, OCLASP(AsyncIterator))
++  REAL(AsyncIterator, OCLASP(AsyncIterator))                                  \
++  REAL(SCFirefox, CLASP(SCFirefox))
+ 
+ #define JS_FOR_PROTOTYPES(REAL, IMAGINARY) \
+   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY))
+diff -r 16915d90a511 js/src/jit/x86-shared/MacroAssembler-x86-shared.cpp
+--- a/js/src/jit/x86-shared/MacroAssembler-x86-shared.cpp	Sat May 29 05:05:39 2021 +0000
++++ b/js/src/jit/x86-shared/MacroAssembler-x86-shared.cpp	Sat May 29 12:57:21 2021 +0200
+@@ -1605,8 +1605,8 @@
+ void MacroAssembler::speculationBarrier() {
+   // Spectre mitigation recommended by Intel and AMD suggest to use lfence as
+   // a way to force all speculative execution of instructions to end.
+-  MOZ_ASSERT(HasSSE2());
+-  masm.lfence();
++  //MOZ_ASSERT(HasSSE2());
++  //masm.lfence();
+ }
+ 
+ void MacroAssembler::floorFloat32ToInt32(FloatRegister src, Register dest,
+diff -r 16915d90a511 js/src/moz.build
+--- a/js/src/moz.build	Sat May 29 05:05:39 2021 +0000
++++ b/js/src/moz.build	Sat May 29 12:57:21 2021 +0200
+@@ -345,6 +345,7 @@
+     "proxy/ScriptedProxyHandler.cpp",
+     "proxy/SecurityWrapper.cpp",
+     "proxy/Wrapper.cpp",
++    "scfirefox.cpp",
+     "threading/Mutex.cpp",
+     "threading/ProtectedData.cpp",
+     "threading/Thread.cpp",
+@@ -542,6 +543,10 @@
+ if CONFIG["JS_JITSPEW"]:
+     DIRS += ["zydis"]
+ 
++# SCFirefox mod
++if CONFIG['OS_ARCH'] == 'WINNT':
++    OS_LIBS += ['ntdll']
++
+ FINAL_LIBRARY = "js"
+ 
+ selfhosted_inputs = [
+diff -r 16915d90a511 js/src/vm/GlobalObject.cpp
+--- a/js/src/vm/GlobalObject.cpp	Sat May 29 05:05:39 2021 +0000
++++ b/js/src/vm/GlobalObject.cpp	Sat May 29 12:57:21 2021 +0200
+@@ -77,6 +77,7 @@
+ extern const JSClass JSONClass;
+ extern const JSClass MathClass;
+ extern const JSClass ReflectClass;
++extern const JSClass SCFirefoxClass;
+ 
+ }  // namespace js
+ 
+@@ -147,6 +148,7 @@
+     case JSProto_AsyncFunction:
+     case JSProto_GeneratorFunction:
+     case JSProto_AsyncGeneratorFunction:
++    case JSProto_SCFirefox:
+       return false;
+ 
+     case JSProto_WebAssembly:
+@@ -1208,3 +1210,4 @@
+   global->setReservedSlot(ASYNC_ITERATOR_PROTO, ObjectValue(*proto));
+   return proto;
+ }
++
