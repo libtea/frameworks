@@ -257,7 +257,12 @@ Interrupts Functionality            | Description
 `uint32_t libtea_apic_read(libtea_instance* instance, uint32_t reg)` | Reads from a local APIC register and returns its value. Provide: the libtea instance; the register to read.
 `uint32_t libtea_apic_read_unsafe(instance, uint32_t reg)` | Reads from a local APIC register and returns its value. Suitable for use in privileged callbacks as it does not use the libtea instance, but performs no checks to ensure APIC functionality is initialized. Provide: the register to read.
 
-Enclave Functionality            | Description
+Enclave Functionality (with future cross-platform support) | Description
+--------------------------------|---------------------------------------------
+`void libtea_read_secure_addr(libtea_instance* instance, void* addr, void* value, int len)` | Reads from an address in a Trusted Execution Environment. Note: support is currently only implemented for SGX debug enclaves, but we hope to add support for other TEEs in the future. Provide: the libtea instance; the address to read; a variable to write the read value to; the number of bytes to read.
+`void libtea_write_secure_addr(libtea_instance* instance, void* addr, void* value, int len)` | Writes to an address in a Trusted Execution Environment. Note: support is currently only implemented for SGX debug enclaves, but we hope to add support for other TEEs in the future. Provide: the libtea instance; the enclave address to write; a variable containing the value to write; the number of bytes to write.
+
+Enclave Functionality (Intel SGX specific) | Description
 --------------------------------|---------------------------------------------
 `void libtea_register_custom_aep_function(libtea_aep_function_t custom_function)` | Registers a custom function to run during the AEP trampoline (optional). The function can be entirely arbitrary - it does not need to handle any AEP-specific state or tasks.
 `void libtea_init_enclave_info(libtea_instance* instance, libtea_enclave_info* enclave)` | Initalizes the provided enclave struct so it can be used by other libtea enclave functions. The struct is initalized using information from SGX.
@@ -266,7 +271,5 @@ Enclave Functionality            | Description
 `void libtea_print_enclave_info(libtea_instance* instance, libtea_enclave_info* enclave)` | Prints the following information about the enclave to stdout: the address of its base, limit, TCS, SSA-GPRSGX, and AEP; its size; and whether it is a debug or production enclave. Provide: an initialized enclave info struct.
 `void* libtea_get_gprsgx_address(libtea_instance* instance, libtea_enclave_info* enclave)` | Returns a pointer to the GPRSGX region in the enclave's SSA frame, where it saves its state upon being interrupted. Provide: the libtea instance; an initialized enclave info struct.
 `void libtea_print_gprsgx_state(libtea_gprsgx_state *sgx_state)` | Prints the provided GPRSGX state to stdout.
-`void libtea_read_enclave_addr(libtea_instance* instance, void* addr, void* value, int len)` | Reads from an enclave address. Note: only works with debug enclaves. Provide: the libtea instance; the enclave address to read; a variable to write the read value to; the number of bytes to read.
-`void libtea_write_enclave_addr(libtea_instance* instance, void* addr, void* value, int len)` | Writes to an enclave address. Note: only works with debug enclaves. Provide: the libtea instance; the enclave address to write; a variable containing the value to write; the number of bytes to write.
 `uint64_t libtea_read_ssa_at_offset(libtea_instance* instance, libtea_enclave_info* enclave, int ssa_field_offset)` | Returns the value at the provided offset in the interrupted enclave's SSA frame. Note: only works with debug enclaves. Provide: the libtea instance; an initialized enclave info struct; the offset within the SSA frame.
 `uint64_t libtea_get_erip(libtea_instance* instance, libtea_enclave_info* enclave)` | Returns the stored instruction pointer (ERIP) from the interrupted enclave's SSA frame. Note: only works with debug enclaves. Provide: the libtea instance; an initialized enclave info struct.

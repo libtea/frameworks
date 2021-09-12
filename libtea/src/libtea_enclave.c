@@ -65,7 +65,7 @@ void libtea_print_enclave_info(libtea_instance* instance, libtea_enclave_info* e
   printf("AEP:           %p\n", sgx_get_aep());
 
   /* First 8 bytes of TCS must be zero */
-  libtea_read_enclave_addr(instance, sgx_get_tcs(), &read, 8); /* We use failure here to determine it's a production enclave - the only case where it doesn't need to be a debug enclave */
+  libtea_read_secure_addr(instance, sgx_get_tcs(), &read, 8); /* We use failure here to determine it's a production enclave - the only case where it doesn't need to be a debug enclave */
   printf("EDBGRD:        %s\n", read ? "Production" : "Debug");
 }
 
@@ -75,7 +75,7 @@ void* libtea_get_gprsgx_address(libtea_instance* instance, libtea_enclave_info* 
   void *tcs_addr = sgx_get_tcs();
 
   if (!ossa) {
-    libtea_read_enclave_addr(instance, tcs_addr + LIBTEA_SGX_TCS_OSSA_OFFSET, &ossa, 8);
+    libtea_read_secure_addr(instance, tcs_addr + LIBTEA_SGX_TCS_OSSA_OFFSET, &ossa, 8);
   }
 
   return libtea_get_enclave_base(enclave) + ossa + LIBTEA_SGX_SSAFRAMESIZE - LIBTEA_SGX_GPRSGX_SIZE;
@@ -110,7 +110,7 @@ void libtea_print_gprsgx_state(libtea_gprsgx_state *gprsgx_state){
 }
 
 
-void libtea_rw_enclave_addr(libtea_instance* instance, void *addr, void* value, int len, int write){
+void libtea_rw_secure_addr(libtea_instance* instance, void *addr, void* value, int len, int write){
   libtea_edbgrd edbgrd_data = {
     .adrs = (uintptr_t) addr,
     .val = (uintptr_t) value,
@@ -130,10 +130,10 @@ uint64_t libtea_read_ssa_at_offset(libtea_instance* instance, libtea_enclave_inf
   void *ssa_field_addr, *tcs_addr = sgx_get_tcs();
 
   if(!ossa){
-    libtea_read_enclave_addr(instance, tcs_addr + LIBTEA_SGX_TCS_OSSA_OFFSET, &ossa, 8);
+    libtea_read_secure_addr(instance, tcs_addr + LIBTEA_SGX_TCS_OSSA_OFFSET, &ossa, 8);
   }
   ssa_field_addr = libtea_get_enclave_base(enclave) + ossa + LIBTEA_SGX_SSAFRAMESIZE - LIBTEA_SGX_GPRSGX_SIZE + ssa_field_offset;
-  libtea_read_enclave_addr(instance, ssa_field_addr, &ret, 8);
+  libtea_read_secure_addr(instance, ssa_field_addr, &ret, 8);
 
   return ret;
 }

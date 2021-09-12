@@ -20,7 +20,7 @@ void custom_aep_function(void) {
   libtea_gprsgx_state gprsgx;
   uint64_t erip = libtea_get_erip(instance, enclave) - (uint64_t) libtea_get_enclave_base(enclave);
   printf("Hello world from a libtea AEP function!\n");
-  libtea_read_enclave_addr(instance, libtea_get_gprsgx_address(instance, enclave), &gprsgx, sizeof(libtea_gprsgx_state));
+  libtea_read_secure_addr(instance, libtea_get_gprsgx_address(instance, enclave), &gprsgx, sizeof(libtea_gprsgx_state));
   uint64_t xsave_first_val = libtea_read_ssa_at_offset(instance, enclave, 0);
   printf("First uint64_t value in XSAVE region of SSA frame is %d\n", xsave_first_val);
   libtea_print_gprsgx_state(&gprsgx);
@@ -80,9 +80,9 @@ int main(int argc, char **argv){
   libtea_info("Got an enclave pointer: %p", enclave_ptr);
   char old_val = 0;
   char new_val = 0xbb;
-  libtea_read_enclave_addr(instance, enclave_ptr, &old_val, 1);
-  libtea_write_enclave_addr(instance, enclave_ptr, &new_val, 1);
-  libtea_read_enclave_addr(instance, enclave_ptr, &new_val, 1);
+  libtea_read_secure_addr(instance, enclave_ptr, &old_val, 1);
+  libtea_write_secure_addr(instance, enclave_ptr, &new_val, 1);
+  libtea_read_secure_addr(instance, enclave_ptr, &new_val, 1);
   libtea_info("Read initial value: 0x%x, wrote 0xbb, read back 0x%x", old_val & 0xff, new_val & 0xff);
   if( (new_val & 0xff) != 0xbb){
     libtea_info("Test 2 failed: value read back was not the value we tried to write.");

@@ -174,33 +174,33 @@ void libtea_print_gprsgx_state(libtea_gprsgx_state *sgx_state);
 
 
 /* Helper function, not in API */
-void libtea_rw_enclave_addr(libtea_instance* instance, void *addr, void* value, int len, int write);
+void libtea_rw_secure_addr(libtea_instance* instance, void *addr, void* value, int len, int write);
 
 
 /**
- * Reads from an enclave address.
+ * Reads from an address in a Trusted Execution Environment.
  *
- * Note: as this uses the EDBGRD (Read from a Debug Enclave) instruction, it will only work with debug enclaves.
+ * Note: currently only supported for SGX debug enclaves.
  *
  * :param instance: The libtea instance
- * :param addr: Enclave address
+ * :param addr: The address
  * :param value: Variable to write the read value to
  * :param len: Number of bytes to read
  */
-#define libtea_read_enclave_addr(instance, addr, value, len)  libtea_rw_enclave_addr(instance, addr, value, len, 0)
+#define libtea_read_secure_addr(instance, addr, value, len)  libtea_rw_secure_addr(instance, addr, value, len, 0)
 
 
 /**
- * Writes to an enclave address.
+ * Writes to an address in a Trusted Execution Environment.
  *
- * Note: as this uses the EDBGRD (Read from a Debug Enclave) instruction, it will only work with debug enclaves.
+ * Note: currently only supported for SGX debug enclaves.
  *
  * :param instance: The libtea instance
- * :param addr: Enclave address
+ * :param addr: The address
  * :param value: Variable containing the value to write
  * :param len: Number of bytes to write
  */
-#define libtea_write_enclave_addr(instance, addr, value, len)  libtea_rw_enclave_addr(instance, addr, value, len, 1)
+#define libtea_write_secure_addr(instance, addr, value, len)  libtea_rw_secure_addr(instance, addr, value, len, 1)
 
 
 /**
