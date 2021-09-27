@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# See LICENSE file for license and copyright information
+
 from http.server import HTTPServer, SimpleHTTPRequestHandler, test as test_orig
 import sys
 def test (*args):

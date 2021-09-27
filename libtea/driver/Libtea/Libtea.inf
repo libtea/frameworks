@@ -79,7 +79,7 @@ KmdfLibraryVersion = $KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
-ManufacturerName="Anon"
+ManufacturerName="IAIK"
 ClassName="Samples" ;
 DiskName = "Libtea Installation Disk"
 Libtea.DeviceDesc = "Libtea Device"

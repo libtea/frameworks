@@ -1,3 +1,5 @@
+/* See LICENSE file for license and copyright information */
+
 #include "scfirefox.h"
 #include "jsapi.h"
 #include "libtea.h"

@@ -1,3 +1,5 @@
+/* See LICENSE file for license and copyright information */
+
 #ifndef SCFIREFOX_H
 #define SCFIREFOX_H
 

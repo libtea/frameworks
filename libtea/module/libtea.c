@@ -94,7 +94,7 @@ pgd_t __attribute__((weak)) __pti_set_user_pgtbl(pgd_t *pgdp, pgd_t pgd);
 #endif
 
 
-MODULE_AUTHOR("Anon");
+MODULE_AUTHOR("IAIK");
 MODULE_DESCRIPTION("Libtea microarchitectural attack development framework driver");
 MODULE_LICENSE("GPL");
 

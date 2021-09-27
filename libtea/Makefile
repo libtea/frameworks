@@ -69,7 +69,7 @@ libtea-x86-basic:
 #this is removed, you will encounter compile errors.
 	rm -f libtea.h
 	rm -f tests/test-basic
-	cat ../LICENSE configs/basic_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h src/libtea_common.c src/arch/x86/libtea_x86_common.c FOOTER | sed 's/#include ".*"//g' > libtea.h
+	cat ../../LICENSE configs/basic_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h src/libtea_common.c src/arch/x86/libtea_x86_common.c FOOTER | sed 's/#include ".*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(CC) $(CFLAGS) tests/test-basic.c -I. -o tests/test-basic
 	make -C module LIBTEA_KERNEL_BUILD_DIR=$(PWD)/module KCPPFLAGS="-DLIBTEA_SUPPORT_CACHE=0 -DLIBTEA_SUPPORT_PAGING=0"
@@ -78,7 +78,7 @@ libtea-x86-cache:
 	rm -f libtea.h
 	rm -f tests/test-basic
 	rm -f tests/test-cache
-	cat ../LICENSE configs/cache_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/libtea_cache.h src/libtea_common.c src/arch/x86/libtea_x86_common.c src/libtea_cache.c src/arch/x86/libtea_x86_cache.c FOOTER | sed 's/#include ".*"//g' > libtea.h
+	cat ../../LICENSE configs/cache_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/libtea_cache.h src/libtea_common.c src/arch/x86/libtea_x86_common.c src/libtea_cache.c src/arch/x86/libtea_x86_cache.c FOOTER | sed 's/#include ".*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(CC) $(CFLAGS) tests/test-basic.c -I. -o tests/test-basic
 	$(CC) $(CFLAGS) tests/test-cache.c -I. -o tests/test-cache
@@ -90,7 +90,7 @@ libtea-x86-paging:
 	rm -f tests/test-basic
 	rm -f tests/test-cache
 	rm -f tests/utest-paging/utest-paging
-	cat ../LICENSE configs/cache_paging_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/libtea_cache.h include/arch/libtea_arch_paging.h include/arch/x86/libtea_x86_paging.h include/libtea_paging.h src/libtea_common.c src/arch/x86/libtea_x86_common.c src/libtea_cache.c src/arch/x86/libtea_x86_cache.c src/libtea_paging.c src/arch/x86/libtea_x86_paging.c FOOTER | sed 's/#include ".*"//g' > libtea.h
+	cat ../../LICENSE configs/cache_paging_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/libtea_cache.h include/arch/libtea_arch_paging.h include/arch/x86/libtea_x86_paging.h include/libtea_paging.h src/libtea_common.c src/arch/x86/libtea_x86_common.c src/libtea_cache.c src/arch/x86/libtea_x86_cache.c src/libtea_paging.c src/arch/x86/libtea_x86_paging.c FOOTER | sed 's/#include ".*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(CC) $(CFLAGS) tests/test-basic.c -I. -o tests/test-basic
 	$(CC) $(CFLAGS) tests/test-cache.c -I. -o tests/test-cache
@@ -106,7 +106,7 @@ libtea-x86-interrupts: say-interrupts
 	rm -f tests/utest-paging/utest-paging
 	rm -f tests/test-interrupts
 	$(AS) -o libtea_irq_entry.o -c src/arch/x86/asm/libtea_irq_entry.S
-	cat ../LICENSE configs/cache_paging_interrupts_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/libtea_cache.h include/arch/libtea_arch_paging.h include/arch/x86/libtea_x86_paging.h include/libtea_paging.h include/libtea_interrupts.h src/libtea_common.c src/arch/x86/libtea_x86_common.c src/libtea_cache.c src/arch/x86/libtea_x86_cache.c src/libtea_paging.c src/arch/x86/libtea_x86_paging.c src/libtea_interrupts.c FOOTER | sed 's/#include ".*"//g' > libtea.h
+	cat ../../LICENSE configs/cache_paging_interrupts_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/libtea_cache.h include/arch/libtea_arch_paging.h include/arch/x86/libtea_x86_paging.h include/libtea_paging.h include/libtea_interrupts.h src/libtea_common.c src/arch/x86/libtea_x86_common.c src/libtea_cache.c src/arch/x86/libtea_x86_cache.c src/libtea_paging.c src/arch/x86/libtea_x86_paging.c src/libtea_interrupts.c FOOTER | sed 's/#include ".*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(CC) $(ENCLAVE_CFLAGS) tests/test-basic.c libtea_irq_entry.o -I. -o tests/test-basic
 	$(CC) $(ENCLAVE_CFLAGS) tests/test-cache.c libtea_irq_entry.o -I. -o tests/test-cache
@@ -128,7 +128,7 @@ libtea-x86-enclave: say-enclave
 	rm -f tests/enclave/Enclave/*.o
 	$(AS) -o libtea_irq_entry.o -c src/arch/x86/asm/libtea_irq_entry.S
 	$(AS) -o libtea_aep_trampoline.o -c src/arch/x86/asm/libtea_aep_trampoline.S
-	cat ../LICENSE configs/cache_paging_interrupts_enclave_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/libtea_cache.h include/arch/libtea_arch_paging.h include/arch/x86/libtea_x86_paging.h include/libtea_paging.h include/libtea_interrupts.h include/libtea_enclave.h src/libtea_common.c src/arch/x86/libtea_x86_common.c src/libtea_cache.c src/arch/x86/libtea_x86_cache.c src/libtea_paging.c src/arch/x86/libtea_x86_paging.c src/libtea_interrupts.c src/libtea_enclave.c FOOTER | sed 's/#include "libtea.*"//g' > libtea.h
+	cat ../../LICENSE configs/cache_paging_interrupts_enclave_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/libtea_cache.h include/arch/libtea_arch_paging.h include/arch/x86/libtea_x86_paging.h include/libtea_paging.h include/libtea_interrupts.h include/libtea_enclave.h src/libtea_common.c src/arch/x86/libtea_x86_common.c src/libtea_cache.c src/arch/x86/libtea_x86_cache.c src/libtea_paging.c src/arch/x86/libtea_x86_paging.c src/libtea_interrupts.c src/libtea_enclave.c FOOTER | sed 's/#include "libtea.*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(CC) $(CFLAGS) $(ENCLAVE_CFLAGS) -o libtea.o -c libtea.h -I. $(ENCLAVE_INCLUDE)
 	$(AR) rcs libtea.a libtea.o libtea_irq_entry.o libtea_aep_trampoline.o
@@ -142,7 +142,7 @@ libtea-x86-enclave: say-enclave
 libtea-aarch64-basic:
 	rm -f libtea.h
 	rm -f tests/test-basic
-	cat ../LICENSE configs/basic_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/arch/aarch64/libtea_aarch64_sysregs.h src/libtea_common.c src/arch/aarch64/libtea_aarch64_common.c FOOTER | sed 's/#include ".*"//g' > libtea.h
+	cat ../../LICENSE configs/basic_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/arch/aarch64/libtea_aarch64_sysregs.h src/libtea_common.c src/arch/aarch64/libtea_aarch64_common.c FOOTER | sed 's/#include ".*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(AARCH64_CC) $(CFLAGS) tests/test-basic.c -I. -o tests/test-basic
 	make -C module LIBTEA_KERNEL_BUILD_DIR=$(PWD)/module KCPPFLAGS="-DLIBTEA_SUPPORT_CACHE=0 -DLIBTEA_SUPPORT_PAGING=0" $(AARCH64_RECIPE)
@@ -151,7 +151,7 @@ libtea-aarch64-cache:
 	rm -f libtea.h
 	rm -f tests/test-basic
 	rm -f tests/test-cache
-	cat ../LICENSE configs/cache_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/arch/aarch64/libtea_aarch64_sysregs.h include/libtea_cache.h src/libtea_common.c src/arch/aarch64/libtea_aarch64_common.c src/libtea_cache.c src/arch/aarch64/libtea_aarch64_cache.c FOOTER | sed 's/#include ".*"//g' > libtea.h
+	cat ../../LICENSE configs/cache_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/arch/aarch64/libtea_aarch64_sysregs.h include/libtea_cache.h src/libtea_common.c src/arch/aarch64/libtea_aarch64_common.c src/libtea_cache.c src/arch/aarch64/libtea_aarch64_cache.c FOOTER | sed 's/#include ".*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(AARCH64_CC) $(CFLAGS) tests/test-basic.c -I. -o tests/test-basic
 	$(AARCH64_CC) $(CFLAGS) tests/test-cache.c -I. -o tests/test-cache
@@ -163,7 +163,7 @@ libtea-aarch64-paging:
 	rm -f tests/test-basic
 	rm -f tests/test-cache
 	rm -f tests/utest-paging/utest-paging
-	cat ../LICENSE configs/cache_paging_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/arch/aarch64/libtea_aarch64_sysregs.h include/libtea_cache.h include/arch/libtea_arch_paging.h include/arch/aarch64/libtea_aarch64_paging.h include/libtea_paging.h src/libtea_common.c src/arch/aarch64/libtea_aarch64_common.c src/libtea_cache.c src/arch/aarch64/libtea_aarch64_cache.c src/libtea_paging.c src/arch/aarch64/libtea_aarch64_paging.c FOOTER | sed 's/#include ".*"//g' > libtea.h
+	cat ../../LICENSE configs/cache_paging_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h include/arch/aarch64/libtea_aarch64_sysregs.h include/libtea_cache.h include/arch/libtea_arch_paging.h include/arch/aarch64/libtea_aarch64_paging.h include/libtea_paging.h src/libtea_common.c src/arch/aarch64/libtea_aarch64_common.c src/libtea_cache.c src/arch/aarch64/libtea_aarch64_cache.c src/libtea_paging.c src/arch/aarch64/libtea_aarch64_paging.c FOOTER | sed 's/#include ".*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(AARCH64_CC) $(CFLAGS) tests/test-basic.c -I. -o tests/test-basic
 	$(AARCH64_CC) $(CFLAGS) tests/test-cache.c -I. -o tests/test-cache
@@ -175,7 +175,7 @@ libtea-aarch64-paging:
 libtea-ppc64-basic:
 	rm -f libtea.h
 	rm -f tests/test-basic
-	cat ../LICENSE configs/basic_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h src/libtea_common.c src/arch/ppc64/libtea_ppc64_common.c FOOTER | sed 's/#include ".*"//g' > libtea.h
+	cat ../../LICENSE configs/basic_config.h libtea_config.h module/libtea_ioctl.h include/libtea_common.h include/arch/libtea_arch.h src/libtea_common.c src/arch/ppc64/libtea_ppc64_common.c FOOTER | sed 's/#include ".*"//g' > libtea.h
 	cp libtea.h doc/libtea.h
 	$(CC) $(CFLAGS) tests/test-basic.c -I. -o tests/test-basic
 

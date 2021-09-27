@@ -36,8 +36,8 @@ pygments_style = 'sphinx'
 # -- Project configuration ------------------------------------------------
 
 project   = 'libtea'
-author    = "Anon"
-copyright = '2021, Anon'
+author    = "IAIK"
+copyright = '2020-2021, IAIK'
 version   = '1.0.0'
 release   = '1.0.0'
 
