@@ -1,17 +1,23 @@
-name: C/C++ CI
+name: Build libtea
 
-on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+on: [push]
+
+defaults:
+ run:
+  working-directory: ./libtea    
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - uses: actions/checkout@v3
+    - name: install dependencies
+      run: sudo apt install gcc make linux-headers-$(uname -r)
     - name: make
       run: make libtea-x86-paging
+    - name: load driver
+      run: sudo insmod module/libtea.ko
+    - name: run basic tests
+      run: sudo ./tests/test-basic
