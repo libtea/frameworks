@@ -4,14 +4,14 @@
  *  team at Graz University of Technology.
  *
  *  Copyright (C)
- *           2020-2021 Catherine Easdon <easdon@protonmail.com>,
- *           2018-2021 CoreSec, IAIK, Graz University of Technology,
+ *           2020-2022 Catherine Easdon <easdon@protonmail.com>,
+ *           2018-2022 CoreSec, IAIK, Graz University of Technology,
  *                     <coresec@iaik.tugraz.at>
- *           2017-2021 Jo Van Bulck <jo.vanbulck@cs.kuleuven.be>,
+ *           2017-2022 Jo Van Bulck <jo.vanbulck@cs.kuleuven.be>,
  *                     Raoul Strackx <raoul.strackx@cs.kuleuven.be>,
  *                     Jago Gyselinck, Moritz Lipp, Marton Bognar,
  *                     Daniel Moghimi
- *           2018-2021 Michael Schwarz <michael.schwarz91@gmail.com>,
+ *           2018-2022 Michael Schwarz <michael.schwarz91@gmail.com>,
  *                     Moritz Lipp, Claudio Canella
  *
  *  Libtea and SCFirefox are free software: you can redistribute them

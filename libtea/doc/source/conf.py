@@ -37,7 +37,7 @@ pygments_style = 'sphinx'
 
 project   = 'libtea'
 author    = "IAIK"
-copyright = '2020-2021, IAIK'
+copyright = '2020-2022, IAIK'
 version   = '1.0.0'
 release   = '1.0.0'
 
