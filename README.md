@@ -9,6 +9,7 @@ This repository provides two open-source frameworks for microarchitectural attac
 ```
 @inproceedings {easdon2022rapid,
 title = {{Rapid Prototyping for Microarchitectural Attacks}},
+author = {Catherine Easdon and Michael Schwarz and Martin Schwarzl and Daniel Gruss},
 booktitle = {{31st USENIX Security Symposium (USENIX Security 22)}},
 year = {2022},
 publisher = {{USENIX Association}}

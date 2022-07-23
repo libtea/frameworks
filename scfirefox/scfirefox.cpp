@@ -3655,7 +3655,7 @@ static JSObject* CreateSCFirefoxObject(JSContext* cx, JSProtoKey key) {
   if (!proto) {
     return nullptr;
   }
-  return NewObjectWithGivenProto<PlainObject>(cx, proto);
+  return NewTenuredObjectWithGivenProto(cx, &SCFirefoxClass, proto);
 }
 
 static const ClassSpec SCFirefoxClassSpec = {CreateSCFirefoxObject, nullptr, scfirefox_functions, scfirefox_properties};

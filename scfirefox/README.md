@@ -2,34 +2,39 @@
 **SCFirefox** is a framework for rapid prototyping of browser-based microarchitectural attacks on Linux. It adds attack primitives from **libtea** to Firefox's JavaScript engine, SpiderMonkey, which you can easily call from JavaScript in the browser.
 
 ## Build
-**SCFirefox** was originally developed with `mozilla-central` changeset `542199:932240e49142` (July 27th 2020). The current patch and framework files have been tested with `mozilla-central` changeset `581403:16915d90a511` (May 29th 2021). However, the files modified in the patch are quite stable and so building **SCFirefox** with both newer and older versions of Firefox should be straightforward, provided the version uses the Mach build system. 
+**SCFirefox** was originally developed with `mozilla-central` changeset `542199:932240e49142` (July 27th 2020). The current patch and framework files have been tested with `mozilla-unified` changeset `698182:eb2b21f037a5` (July 23rd 2022 ~ Nightly v104). However, the files modified in the patch have been quite stable over the last two years and the required code changes are small, so building **SCFirefox** with both newer and older versions of Firefox should be straightforward provided that the version uses the Mach build system.
 
-To save space, the source files are not included in the repo, so first follow the download and build instructions here: https://firefox-source-docs.mozilla.org/contributing/contribution_quickref.html. Nightly builds from `mozilla-central` or `mozilla-unified` are inherently a little unstable, so if you have build problems try reverting to an early commit. We use Nightly rather than the release versions as some debug features are only supported in Nightly.
-
-* Apply the **SCFirefox** patch (on Windows, use a Linux shell such as the one provided by the Firefox build bootstrapping process). If the patch fails, try running a fuzzy patch or making the changes by hand; only a few lines of Firefox source code need to be modified.
-
-``` bash
-patch -p{n} < scfirefox.patch
-```
+* First, follow the download and build instructions here: https://firefox-source-docs.mozilla.org/contributing/contribution_quickref.html and checkout the latest source code into a folder in the `scfirefox` directory of this repo.
 
 * Ensure your build of **libtea** is up-to-date (see **libtea** build instructions) and built with the paging configuration (interrupts and enclave functionality are not supported in **SCFirefox**).
-* Copy `scfirefox.cpp`, `scfirefox.h`, and `libtea.h` into `mozilla-central/js/src`.
-* Additionally, if building on Windows remove the line `'/config/check_spidermonkey_style.py',` from `js/src/build/moz.build`.
-* Export the debug `MOZCONFIG`, then in the root directory run the following (note that on Windows, `MOZCONFIG` will be auto-detected if the file is in the root Firefox source directory):
+
+* Apply the **SCFirefox** patch (on Windows, use a Linux shell such as the one provided by the Firefox build bootstrapping process) and copy in the remaining files as shown below. If the patch fails, try running a fuzzy patch or making the changes by hand; only a few lines of code need to be modified.
 
 ``` bash
-export MOZCONFIG="{your path to scfirefox}/MOZCONFIG"
+cd mozilla-unified
+patch -p1 < ../scfirefox.patch
+cp ../../libtea/libtea.h js/src/libtea.h
+cp ../scfirefox.h js/src/scfirefox.h
+cp ../scfirefox.cpp js/src/scfirefox.cpp
+export MOZCONFIG="../MOZCONFIG"
+```
+
+* Then start the build:
+
+``` bash
 ./mach bootstrap
 ./mach build
 ```
 
-When prompted to select a build option during the bootstrap process, choose either 2 (Firefox for Desktop without downloaded artifacts) for the full browser or 5 to build just the JS shell (SpiderMonkey). 
+When prompted to select a build option during the bootstrap process, choose either 2 (Firefox for Desktop without downloaded artifacts) for the full browser or 5 to build just the JS shell (SpiderMonkey).
 
 By default, the **SCFirefox** `MOZCONFIG` only builds the JS shell rather than the full Firefox browser. To build the full browser, remove the line `ac_add_options --enable-application=js`. To disable all debug options and build a non-debug, optimized release version of the browser, simply do not export the `MOZCONFIG` before building. Before building after modifying the `MOZCONFIG` file, you must clean all build files by running `./mach clobber`, or you will encounter build errors.
 
 To cross-compile (e.g. to build for AArch64 on x86), ensure you have an appropriate cross-compilation toolchain installed and set the target variable in your `MOZCONFIG`, e.g. `ac_add_options --target=aarch64`. You will need a cross-compiled copy of zlib (set the `MOZ_ZLIB_CFLAGS` and `MOZ_ZLIB_LIBS` variables).
 
 Note that the initial build of the full browser takes a very long time and places high load on all CPU cores; your system may be unusable during this time. Subsequent builds (if you only change **SCFirefox** or other `js/src` files) are much faster.
+
+The latest commits are inherently a little unstable as features are still pre-alpha, so if you have build problems try reverting to an earlier commit.
 
 ## Usage
 * Use `./mach run` to run the JS shell / browser.
@@ -176,3 +181,13 @@ Windows-only Functionality            | Description
 `unlock_windows_page(address)` | Unlock the provided page with `VirtualUnlock` (Windows-only).
 `isolate_windows_core(core)` |  Attempts to isolate the provided CPU core by removing it from the affinity mask of all running user processes (Windows-only). This is an experimental function and is only enabled if `LIBTEA_ENABLE_WINDOWS_CORE_ISOLATION` is set to 1 in `libtea_config.h`. Returns `LIBTEA_SUCCESS` on success, otherwise `LIBTEA_ERROR`.
 `force_memory_deduplication()` | Forces a page combining scan across the whole system (Windows-only). This is experimental and is only enabled if `LIBTEA_ENABLE_WINDOWS_MEMORY_DEDUPLICATION` is set to 1 in `libtea_config.h`. Returns the number of pages combined.
+
+## Contributing
+If you would like to add features to SCFirefox, the following resources may be useful:
+
+* [Firefox Source Docs](https://firefox-source-docs.mozilla.org/index.html) - extensive documentation of the Mach build system and Firefox internals, in particular [SpiderMonkey](https://firefox-source-docs.mozilla.org/js/index.html)
+* [https://spidermonkey.dev/] for more SpiderMonkey documentation and developer contact channels
+* [Mozilla Hacks blog](https://hacks.mozilla.org/)
+* [What train is it?](https://whattrainisitnow.com/) - tracks the latest Firefox versions
+* [Searchfox](https://searchfox.org/) - search all Mozilla codebases in your browser. Very handy for finding examples of a keyword / code pattern to understand how it should be used, and for understanding when breaking code changes were made (hover to the left of a line for handy "show latest version without this line" and "show earliest version with this line" links)
+* [Clawing Our Way Back To Precision](https://blog.mozilla.org/javascript/2013/07/18/clawing-our-way-back-to-precision/) - a blog article from a SpiderMonkey developer explaining some core garbage collection concepts such as object rooting
