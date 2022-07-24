@@ -62,6 +62,10 @@
 #include <linux/kprobes.h>
 #include <linux/uaccess.h>
 
+#ifndef LINUX_VERSION_CODE
+#define LINUX_VERSION_CODE KERNEL_VERSION(5, 15, 0)
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
 #include <linux/mmap_lock.h>
 #endif
@@ -206,18 +210,24 @@ static int has_umem = 0;
 
 void (*flush_tlb)(unsigned long);
 void (*flush_tlb_mm_range_func)(struct mm_struct*, unsigned long, unsigned long, unsigned int, bool);
+void (*native_write_cr4_func)(unsigned long);
 static struct mm_struct* get_mm(size_t);
 
-#if !LIBTEA_AARCH64
+
 static const char *devmem_hook = "devmem_is_allowed";
 static int devmem_bypass(struct kretprobe_instance *p, struct pt_regs *regs) {
+  #if LIBTEA_AARCH64
+  if (regs->regs[0] == 0) {
+    regs->regs[0] = 1;
+  }
+  #else
   if (regs->ax == 0) {
     regs->ax = 1;
   }
+  #endif
   return 0;
 }
 static struct kretprobe probe_devmem = {.handler = devmem_bypass, .maxactive = 20};
-#endif
 
 
 static void _flush_tlb(void *addr) {
@@ -247,13 +257,8 @@ static void _flush_tlb(void *addr) {
     #else
     cr4 = __read_cr4();
     #endif
-    #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 8, 0)
-    native_write_cr4(cr4 & ~X86_CR4_PGE);
-    native_write_cr4(cr4);
-    #else
-    __write_cr4(cr4 & ~X86_CR4_PGE);
-    __write_cr4(cr4);
-    #endif
+    native_write_cr4_func(cr4 & ~X86_CR4_PGE);
+    native_write_cr4_func(cr4);
     raw_local_irq_restore(flags);
   }
 
@@ -274,10 +279,32 @@ static void flush_tlb_custom(unsigned long addr) {
   on_each_cpu(_flush_tlb, (void*) addr, 1);
 }
 
-static void flush_tlb_kernel(unsigned long addr) {
-  flush_tlb_mm_range_func(get_mm(task_pid_nr(current)), addr, addr + PAGE_SIZE, PAGE_SHIFT, false);
-}
+#if LIBTEA_AARCH64
+typedef struct tlb_page_s {
+  struct vm_area_struct* vma;
+  unsigned long addr;
+} tlb_page_t;
 
+void _flush_tlb_page_smp(void* info) {
+  tlb_page_t* tlb_page = (tlb_page_t*) info;
+  flush_tlb_page(tlb_page->vma, tlb_page->addr);
+}
+#endif
+
+static void flush_tlb_kernel(unsigned long addr) {
+  #if LIBTEA_X86
+  flush_tlb_mm_range_func(get_mm(task_pid_nr(current)), addr, addr + PAGE_SIZE, PAGE_SHIFT, false);
+  #elif LIBTEA_AARCH64
+    struct vm_area_struct *vma = find_vma(current->mm, addr);
+    tlb_page_t tlb_page;
+    if (unlikely(vma == NULL || addr < vma->vm_start)) {
+      return;
+    }
+    tlb_page.vma = vma;
+    tlb_page.addr = addr;
+    on_each_cpu(_flush_tlb_page_smp, &tlb_page, 1);
+  #endif
+}
 
 static void _set_pat(void* _pat) {
   #if LIBTEA_X86
@@ -390,6 +417,7 @@ static int resolve_vm(size_t addr, vm_t* entry, int lock) {
   /* Map PTE (page table entry) */
   entry->pte = pte_offset_map(entry->pmd, addr);
   if (entry->pte == NULL || pmd_large(*(entry->pmd))) {
+    entry->pte = NULL;
     goto error_out;
   }
   entry->valid |= LIBTEA_VALID_MASK_PTE;
@@ -427,9 +455,9 @@ static int update_vm(libtea_page_entry* new_entry, int lock) {
 
   /* Lock mm */
   #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
-  if(lock) mmap_read_lock(mm);
+  if(lock) mmap_write_lock(mm);
   #else
-  if(lock) down_read(&mm->mmap_sem);
+  if(lock) down_write(&mm->mmap_sem);
   #endif
 
   resolve_vm(addr, &old_entry, 0);
@@ -466,9 +494,9 @@ static int update_vm(libtea_page_entry* new_entry, int lock) {
 
   /* Unlock mm */
   #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
-  if(lock) mmap_read_unlock(mm);
+  if(lock) mmap_write_unlock(mm);
   #else
-  if(lock) up_read(&mm->mmap_sem);
+  if(lock) up_write(&mm->mmap_sem);
   #endif
 
   return 0;
@@ -615,8 +643,10 @@ static long libtea_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         return -1;
       }
       #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
+      mmap_write_lock(mm);
       mmap_read_lock(mm);
       #else
+      down_write(&mm->mmap_sem);
       down_read(&mm->mmap_sem);
       #endif
       mm_is_locked = true;
@@ -630,8 +660,10 @@ static long libtea_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
         return -1;
       }
       #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
+      mmap_write_unlock(mm);
       mmap_read_unlock(mm);
       #else
+      up_write(&mm->mmap_sem);
       up_read(&mm->mmap_sem);
       #endif
       mm_is_locked = false;
@@ -682,15 +714,15 @@ static long libtea_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
       mm = get_mm(paging.pid);
       if(!mm) return 1;
       #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
-      if(!mm_is_locked) mmap_read_lock(mm);
+      if(!mm_is_locked) mmap_write_lock(mm);
       #else
-      if(!mm_is_locked) down_read(&mm->mmap_sem);
+      if(!mm_is_locked) down_write(&mm->mmap_sem);
       #endif
       mm->pgd = (pgd_t*)phys_to_virt(paging.root);
       #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
-      if(!mm_is_locked) mmap_read_unlock(mm);
+      if(!mm_is_locked) mmap_write_unlock(mm);
       #else
-      if(!mm_is_locked) up_read(&mm->mmap_sem);
+      if(!mm_is_locked) up_write(&mm->mmap_sem);
       #endif
       return 0;
     }
@@ -814,15 +846,26 @@ static struct miscdevice libtea_dev = {
 };
 
 
-int init_module(void) {
+static int __init libtea_init(void) {
   int r;
+
+  #ifdef KPROBE_KALLSYMS_LOOKUP
+    register_kprobe(&kp);
+    kallsyms_lookup_name = (kallsyms_lookup_name_t) kp.addr;
+    unregister_kprobe(&kp);
+
+    if(!unlikely(kallsyms_lookup_name)) {
+      pr_alert("[libtea-module] Could not retrieve kallsyms_lookup_name address\n");
+      return -ENXIO;
+    }
+  #endif
 
   /* Register device */
   r = misc_register(&libtea_dev);
   if (r != 0) {
     printk(KERN_ALERT "[libtea-module] Failed registering device with %d\n", r);
     libtea_dev.this_device = NULL;
-    return -EINVAL;
+    return -ENXIO;
   }
 
   #if LIBTEA_SUPPORT_PAGING
@@ -833,18 +876,26 @@ int init_module(void) {
   }
   flush_tlb = flush_tlb_kernel;
 
-  #if !LIBTEA_AARCH64
+  #if LIBTEA_X86
+  if (!cpu_feature_enabled(X86_FEATURE_INVPCID_SINGLE)) {
+    native_write_cr4_func = (void *) kallsyms_lookup_name("native_write_cr4");
+    if(!native_write_cr4_func) {
+        pr_alert("[libtea-module] Could not retrieve native_write_cr4 function\n");
+        return -ENXIO;
+    }
+  }
+  #endif
+
   probe_devmem.kp.symbol_name = devmem_hook;
 
   if (register_kretprobe(&probe_devmem) < 0) {
     printk(KERN_ALERT "[libtea-module] Could not bypass /dev/mem restriction\n");
     misc_deregister(&libtea_dev);
-    return -EINVAL;
+    return -ENXIO;
   }
   else {
     printk(KERN_INFO "[libtea-module] /dev/mem is now superuser read-/writable\n");
   }
-  #endif
 
   OPS(OP_lseek) = (void*)kallsyms_lookup_name("memory_lseek");
   OPS(read) = (void*)kallsyms_lookup_name("read_mem");
@@ -870,14 +921,11 @@ int init_module(void) {
 }
 
 
-void cleanup_module(void) {
+static void __exit libtea_exit(void) {
   misc_deregister(&libtea_dev);
 
   #if LIBTEA_SUPPORT_PAGING
-
-  #if !LIBTEA_AARCH64
   unregister_kretprobe(&probe_devmem);
-  #endif
 
   if (has_umem) {
     printk(KERN_INFO "[libtea-module] Removing unprivileged memory access\n");
@@ -888,3 +936,6 @@ void cleanup_module(void) {
 
   printk(KERN_INFO "[libtea-module] Removed.\n");
 }
+
+module_init(libtea_init);
+module_exit(libtea_exit);
