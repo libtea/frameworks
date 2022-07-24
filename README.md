@@ -1,6 +1,6 @@
 # Libtea and SCFirefox
 
-<img src="libtea.png" width=160 alt="logo" align="left" />
+<img src="doc/libtea.png" width=160 alt="logo" align="left" />
 
 This repository provides two open-source frameworks for microarchitectural attack development, **libtea** and **SCFirefox**. **libtea** provides a C header and kernel driver (compatible with Linux, Windows, and jailbroken Android) to facilitate cross-platform attack development in native code, while **SCFirefox** provides access to the functionality of **libtea** in a modified Firefox browser (or in the Spidermonkey JS Shell) to facilitate development of browser-based microarchitectural attacks. For more details and installation instructions, please see the separate READMEs for each framework.
 
@@ -16,7 +16,7 @@ publisher = {{USENIX Association}}
 }
 ```
 
-This repository includes two appendices for the paper: the [extended bibliography](/extended-bibliography.md) for the literature review, and the [user study and interview questions](/user-study-and-interviews.md).
+This repository includes two appendices for the paper: the [extended bibliography](doc/extended-bibliography.md) for the literature review, and the [user study and interview questions](doc/user-study-and-interviews.md).
 
 **License.** Both frameworks are licensed under GPLv3. Please feel free to use them and adapt them to suit your needs. Feedback and success stories are much appreciated - if the frameworks are useful for your research project, do let us know and we'll share your project here.
 
