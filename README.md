@@ -1,4 +1,5 @@
 # Libtea and SCFirefox
+![GitHub Actions](https://github.com/libtea/frameworks/actions/workflows/libtea.yml/badge.svg)
 
 <img src="doc/libtea.png" width=160 alt="logo" align="left" />
 
