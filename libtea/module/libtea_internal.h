@@ -78,19 +78,13 @@ static inline int pmd_large(pmd_t pmd) {
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)
-unsigned long kallsyms_lookup_name(const char* name) {
-  struct kprobe kp = {
-    .symbol_name	= name,
-  };
-
-  int ret = register_kprobe(&kp);
-  if (ret < 0) {
-    return 0;
-  };
-
-  unregister_kprobe(&kp);
-  return (unsigned long) kp.addr;
-}
+#define KPROBE_KALLSYMS_LOOKUP 1
+typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
+kallsyms_lookup_name_t kallsyms_lookup_name_func;
+#define kallsyms_lookup_name kallsyms_lookup_name_func
+static struct kprobe kp = {
+  .symbol_name	= "kallsyms_lookup_name",
+};
 #endif
 
 typedef struct {
