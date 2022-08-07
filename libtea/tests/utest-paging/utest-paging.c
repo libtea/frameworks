@@ -29,7 +29,7 @@ size_t hrtime() {
 }
 #else
 size_t hrtime() {
-    __int64 wintime; 
+    __int64 wintime;
     GetSystemTimePreciseAsFileTime((FILETIME*)&wintime);
     return wintime;
 }
@@ -62,7 +62,7 @@ int entry_equal(libtea_page_entry* e1, libtea_page_entry* e2) {
     }
     if((e1->valid & LIBTEA_VALID_MASK_P4D) && (e2->valid & LIBTEA_VALID_MASK_P4D)) {
         diff |= e1->p4d ^ e2->p4d;
-    }    
+    }
     if((e1->valid & LIBTEA_VALID_MASK_PUD) && (e2->valid & LIBTEA_VALID_MASK_PUD)) {
         diff |= e1->pud ^ e2->pud;
     }
@@ -85,7 +85,7 @@ UTEST(resolve, resolve_basic) {
     ASSERT_TRUE(vm.pgd);
     ASSERT_TRUE(vm.pte);
     ASSERT_TRUE(vm.valid & LIBTEA_VALID_MASK_PTE);
-    ASSERT_TRUE(vm.valid & LIBTEA_VALID_MASK_PGD);    
+    ASSERT_TRUE(vm.valid & LIBTEA_VALID_MASK_PGD);
 }
 
 UTEST(resolve, resolve_valid_mask) {
@@ -167,15 +167,15 @@ UTEST(update, new_pte) {
     vm1.pte = libtea_set_pfn(vm1.pte, 0x1234);
     vm1.valid = LIBTEA_VALID_MASK_PTE;
     libtea_update_addr(instance, scratch, 0, &vm1);
-    
+
     libtea_page_entry check = libtea_resolve_addr(instance, scratch, 0);
     ASSERT_NE((size_t)libtea_cast(check.pte, libtea_pte).pfn, libtea_get_pfn(pte));
     ASSERT_EQ((size_t)libtea_cast(check.pte, libtea_pte).pfn, 0x1234);
-    
+
     vm1.valid = LIBTEA_VALID_MASK_PTE;
     vm1.pte = pte;
     libtea_update_addr(instance, scratch, 0, &vm1);
-    
+
     libtea_page_entry vm2 = libtea_resolve_addr(instance, scratch, 0);
     ASSERT_TRUE(entry_equal(&vm, &vm2));
 }
@@ -271,7 +271,7 @@ UTEST(paging, get_root_deterministic) {
     size_t root = libtea_get_paging_root(instance, 0);
     ASSERT_TRUE(root);
     size_t root_check = libtea_get_paging_root(instance, 0);
-    ASSERT_EQ(root, root_check);   
+    ASSERT_EQ(root, root_check);
 }
 
 UTEST(paging, get_root_invalid_pid) {
@@ -334,23 +334,23 @@ UTEST(memtype, uncachable_access_time) {
     ASSERT_NE(uc_mt, -1);
     int wb_mt = libtea_find_first_memory_type(instance, LIBTEA_WRITE_BACK);
     ASSERT_NE(wb_mt, -1);
-    
+
     int before = access_time(scratch);
-    
+
     libtea_page_entry entry = libtea_resolve_addr(instance, scratch, 0);
     size_t pte = entry.pte;
     ASSERT_TRUE(entry.valid);
     ASSERT_TRUE(entry.pte);
     entry.pte = libtea_apply_memory_type(entry.pte, uc_mt);
     entry.valid = LIBTEA_VALID_MASK_PTE;
-    libtea_update_addr(instance, scratch, 0, &entry);   
-    
+    libtea_update_addr(instance, scratch, 0, &entry);
+
     int uc = access_time(scratch);
-    
+
     entry.pte = pte;
     entry.valid = LIBTEA_VALID_MASK_PTE;
-    libtea_update_addr(instance, scratch, 0, &entry);   
-    
+    libtea_update_addr(instance, scratch, 0, &entry);
+
     int after = access_time(scratch);
 
     ASSERT_LT(after + 5, uc);
@@ -371,12 +371,12 @@ UTEST(tlb, access_time) {
 #if LIBTEA_LINUX
 UTEST(tlb, invalid_flush_tlb_implementation) {
     int ret = libtea_switch_flush_tlb_implementation(instance, 3);
-    ASSERT_TRUE(ret);
+    ASSERT_FALSE(ret);
 }
 
 UTEST(tlb, valid_flush_tlb_implementation) {
     int ret = libtea_switch_flush_tlb_implementation(instance, LIBTEA_FLUSH_TLB_KERNEL);
-    ASSERT_FALSE(ret);
+    ASSERT_TRUE(ret);
 }
 
 UTEST(tlb, access_time_kernel_flush_tlb) {
@@ -397,7 +397,7 @@ UTEST(tlb, access_time_custom_flush_tlb) {
 int main(int argc, const char *const argv[]) {
     instance = libtea_init();
     if(instance == NULL) {
-        printf("Could not initialize Libtea, did you load the kernel module?\n");
+        printf("Could not initialize libtea, did you load the kernel module?\n");
         return 1;
     }
     memset(scratch, 0, sizeof(scratch));
@@ -406,7 +406,7 @@ int main(int argc, const char *const argv[]) {
     memset(accessor, 2, sizeof(accessor));
 
     int result = utest_main(argc, argv);
- 
+
     libtea_cleanup(instance);
     return result;
 }

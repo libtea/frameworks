@@ -10,18 +10,20 @@
 
 
 int libtea__arch_init_cache_info(libtea_instance* instance){
-  instance->llc_slices = instance->physical_cores;    /* This holds on Intel (exception handled below) and AMD Zen -> Epyc, Zen 2 */
-  
+  /* This holds on Intel (exception handled below) and AMD Zen -> Epyc, Zen 2.
+   * Alternative for Intel: read MSR_UNC_CBO_CONFIG 0x396 and parse value as described in the manual. */
+  instance->llc_slices = instance->physical_cores;
+
   int level = 0;
   uint32_t eax, ebx, ecx, edx;
 
   if(instance->is_intel) {
-    if(instance->cpu_architecture >= 0x16) { 
+    if(instance->cpu_architecture >= 0x16) {
       /* If Skylake or newer */
       instance->llc_slices *= 2;
     }
     do {
-      
+
       #if LIBTEA_LINUX
       asm volatile("cpuid" : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx) : "a" (4), "c" (level));
       #else
@@ -32,7 +34,7 @@ int libtea__arch_init_cache_info(libtea_instance* instance){
       ecx = cpuid_info[2];
       edx = cpuid_info[3];
       #endif
-      
+
       int type = eax & 0x1f;
       if(!type) break;
       level++;
@@ -46,13 +48,13 @@ int libtea__arch_init_cache_info(libtea_instance* instance){
   }
 
   /* Check if it is actually an AMD CPU and not Via, Centaur etc */
-  
+
   #if LIBTEA_LINUX
   uint32_t temp = 0;
   uint32_t name[3] = {0, 0, 0};
   __cpuid(0, temp, name[0], name[2], name[1]);
   if(strcmp((char *) name, "AuthenticAMD") == 0) {
-  
+
   #else
   int temp[4] = {0, 0, 0, 0};
   __cpuid(temp, 0);
@@ -64,7 +66,7 @@ int libtea__arch_init_cache_info(libtea_instance* instance){
   #endif
 
     do {
-    
+
       #if LIBTEA_LINUX
       asm volatile("cpuid" : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx) : "a" (0x8000001D), "c" (level));
       #else
@@ -75,7 +77,7 @@ int libtea__arch_init_cache_info(libtea_instance* instance){
       ecx = cpuid_info[2];
       edx = cpuid_info[3];
       #endif
-      
+
       int type = eax & 0xf;   /* bits 4:0 */
       if(!type && level == 0){
         /* If this happens, the CPU does not support CPUID topology extensions */

@@ -109,7 +109,7 @@ libtea_inline uint64_t libtea__timestamp_perf(libtea_instance* instance) {
     return 0;
   }
   return result;
-  #else 
+  #else
   /* Closest Windows equivalent to the perf interface. Microsoft recommends over RDTSC. */
   LARGE_INTEGER time;
   QueryPerformanceCounter(&time);
@@ -440,21 +440,21 @@ libtea_instance* libtea_init_nokernel(){
    * multiple CPU packages.
    */
   const char* cmd1 = LIBTEA_SHELL " -c 'cat /sys/devices/system/cpu/cpu*/topology/core_id | wc -l'";
-  const char* cmd2 = LIBTEA_SHELL " -c 'cat /sys/devices/system/cpu/cpu*/topology/core_id | uniq | wc -l'";
+  const char* cmd2 = LIBTEA_SHELL " -c 'cat /sys/devices/system/cpu/cpu*/topology/core_id | sort -u | wc -l'";
   instance->logical_cores = libtea__get_numeric_sys_cmd_output(cmd1);
   instance->physical_cores = libtea__get_numeric_sys_cmd_output(cmd2);
   if(instance->physical_cores <= 0 || instance->logical_cores <= 0){
     libtea_info("Error: Libtea could not obtain the number of cores. Is /proc/cpuinfo accessible, and are the grep, uniq, and wc binaries present?");
     return NULL;
   }
-  
+
   #else
   PSYSTEM_LOGICAL_PROCESSOR_INFORMATION infoBuffer = NULL;
   PSYSTEM_LOGICAL_PROCESSOR_INFORMATION infoBufferHandle = NULL;
   DWORD length = 0;
 
   /* First attempt will fail but writes the size buffer we actually need into length */
-  GetLogicalProcessorInformation(infoBuffer, &length); 
+  GetLogicalProcessorInformation(infoBuffer, &length);
 
   if(GetLastError() != ERROR_INSUFFICIENT_BUFFER){
     libtea_info("Error getting processor information in Libtea initialization - cannot continue, returning NULL instance.");
@@ -462,7 +462,7 @@ libtea_instance* libtea_init_nokernel(){
     return NULL;
   }
   infoBuffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION) malloc(length);
-  bool success = GetLogicalProcessorInformation(infoBuffer, &length); 
+  bool success = GetLogicalProcessorInformation(infoBuffer, &length);
 
   if(!success){
     libtea_info("Error getting processor information in Libtea initialization - cannot continue, returning NULL instance.");
@@ -477,7 +477,7 @@ libtea_instance* libtea_init_nokernel(){
   /* Parsing code adapted from Windows Dev Center */
   for (int i=0; i <= length; i += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION)) {
     switch (infoBufferHandle->Relationship) {
-      
+
       case RelationProcessorCore:
         physicalCores++;
         logicalCores += libtea__windows_count_set_bits(infoBufferHandle->ProcessorMask);
@@ -486,7 +486,7 @@ libtea_instance* libtea_init_nokernel(){
       default:
         break;
       }
-      
+
       infoBufferHandle++;
   }
 
@@ -509,7 +509,7 @@ libtea_instance* libtea_init_nokernel(){
     else if(counter == 2 && (instance->is_intel && instance->logical_cores == 2 * instance->physical_cores)){
       libtea__set_timer(instance, LIBTEA_TIMER_MONOTONIC_CLOCK);
     }
-    else if(counter == 1) libtea__set_timer(instance, LIBTEA_TIMER_PERF); 
+    else if(counter == 1) libtea__set_timer(instance, LIBTEA_TIMER_PERF);
     else libtea__set_timer(instance, LIBTEA_TIMER_MONOTONIC_CLOCK);
 
     if(!setjmp(libtea__trycatch_buf)) {
@@ -528,7 +528,7 @@ libtea_instance* libtea_init_nokernel(){
   #if LIBTEA_SUPPORT_CACHE
   if(libtea_init_cache(instance) != LIBTEA_SUCCESS) return NULL;
   #endif
-  
+
   return instance;
 }
 
@@ -704,15 +704,15 @@ libtea_inline size_t libtea_get_physical_address(libtea_instance* instance, size
 
   #if LIBTEA_LINUX
   int fd = open("/proc/self/pagemap", O_RDONLY);
-  uint64_t virtual_addr = (uint64_t)vaddr;
   size_t value = 0;
   //TODO assuming 4KB pagesize - could use instance->pagesize but we only initialize it in paging init
-  off_t offset = (virtual_addr / 4096) * sizeof(value);
-  int got = pread(fd, &value, sizeof(value), offset);
+  off_t offset = (vaddr / 4096) * sizeof(size_t);
+  int got = pread(fd, &value, sizeof(size_t), offset);
   if (got != 8) {
      libtea_info("Error: pread failed (return value %d), could not read 8-byte physical address", got);
-     return LIBTEA_ERROR;
+     return SIZE_MAX;
   }
+  close(fd);
   return (value << 12) | ((size_t)vaddr & 0xFFFULL);
 
   #else
@@ -875,15 +875,26 @@ libtea_inline void* libtea_map_file_by_offset(const char* filename, size_t* file
 
   *fileHandle = open(filename, prot1);
   if (*fileHandle < 0) {
+    libtea_info("Error in libtea_map_file_by_offset: open failed. Check the filename is correct.");
     return NULL;
   }
-  void* mapping = mmap(0, 4096, prot2, MAP_SHARED, *fileHandle, offset & ~(0xFFF));
-  if (mapping == MAP_FAILED) {
+  struct stat filestat;
+  if (fstat(*fileHandle, &filestat) == -1) {
+    libtea_info("Error in libtea_map_file_by_offset: fstat failed.");
     close(*fileHandle);
     return NULL;
   }
+  void* mapping = mmap(0, filestat.st_size, prot2, MAP_SHARED, *fileHandle, offset & ~(0xFFF));
+  if (mapping == MAP_FAILED) {
+    libtea_info("Error in libtea_map_file_by_offset: mmap failed.");
+    close(*fileHandle);
+    return NULL;
+  }
+  if (filesize != NULL) {
+    *filesize = filestat.st_size;
+  }
   return (char*) mapping + (offset & 0xFFF);
-  
+
   #else
   NO_WINDOWS_SUPPORT;
   return NULL;
