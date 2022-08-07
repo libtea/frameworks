@@ -34,10 +34,10 @@ libtea_inline void libtea_calibrate_flush_reload(libtea_instance* instance);
 
 /**
  * Returns the cache slice of the provided physical address.
- * 
+ *
  * Note: only supported on Intel CPUs (based on Maurice et al., 'Reverse Engineering
  * Intel Last-Level Cache Complex Addressing Using Performance Counters', RAID 2015).
- * 
+ *
  * :param instance: The libtea instance
  * :param paddr: The physical address
  * :return: Cache slice of the physical address
@@ -107,7 +107,7 @@ libtea_inline void libtea_prime(libtea_instance* instance, libtea_eviction_set s
 /**
  * Performs Prime+Probe and builds an eviction set for the provided address if
  * one does not exist.
- * 
+ *
  * :param instance: The libtea instance
  * :param set: The eviction set
  * :return: The execution time of the probe step
@@ -117,15 +117,16 @@ libtea_inline int libtea_prime_probe(libtea_instance* instance, libtea_eviction_
 
 /**
  * Calculates the slice ID of the virtual address by measuring with performance counters (requires MSR access).
- * 
+ *
  * Note: only supported on Intel CPUs (based on Maurice et al., 'Reverse Engineering
  * Intel Last-Level Cache Complex Addressing Using Performance Counters', RAID 2015).
  *
  * :param instance: The libtea instance
+ * :param cpu: The CPU core to measure on
  * :param vaddr: The virtual address
  * :return: The slice id
  */
-libtea_inline size_t libtea_measure_slice(libtea_instance* instance, void* address);
+libtea_inline size_t libtea_measure_slice(libtea_instance* instance, int cpu, void* address);
 
 
 /**

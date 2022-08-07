@@ -31,7 +31,7 @@ libtea_inline void libtea__init_cache_info(libtea_instance* instance) {
     if(instance->llc_size == -1) goto libtea__init_cache_info_err;
 
     /* getconf worked and LLC is level 3, so get all other params at this level, ignore level 4 victim caches */
-    else if(instance->llc_size != 0){
+    else if(instance->llc_size != 0){  
       const char* cmd2 = LIBTEA_SHELL " -c 'getconf LEVEL3_CACHE_ASSOC'";
       instance->llc_ways = libtea__get_numeric_sys_cmd_output(cmd2);
       const char* cmd3 = LIBTEA_SHELL " -c 'getconf LEVEL3_CACHE_LINESIZE'";
@@ -39,7 +39,7 @@ libtea_inline void libtea__init_cache_info(libtea_instance* instance) {
     }
 
     /* getconf worked but no level 3 cache, so try L2 */
-    else{
+    else{ 
       const char* cmd4 = LIBTEA_SHELL " -c 'getconf LEVEL2_CACHE_SIZE'";
       instance->llc_size = libtea__get_numeric_sys_cmd_output(cmd4);
       if(instance->llc_size <= 0) goto libtea__init_cache_info_err; //no L2 either, give up (assume L1 cannot be LLC)
@@ -60,7 +60,7 @@ libtea_inline void libtea__init_cache_info(libtea_instance* instance) {
     #endif
 
   }
-
+  
 }
 
 // ---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ libtea_inline static void libtea_cleanup_cache(libtea_instance* instance) {
 // ---------------------------------------------------------------------------
 libtea_inline int libtea__log_2(const uint32_t x) {
   if(x == 0) return 0;
-
+  
   #if _MSC_VER
   return (31 - (int)__lzcnt(x));
   #else
@@ -144,7 +144,6 @@ libtea_inline void libtea__eviction_cleanup(libtea_instance* instance) {
 
 // ---------------------------------------------------------------------------
 libtea_inline size_t libtea__eviction_get_lookup_index(libtea_instance* instance, size_t paddr) {
-  /* Use to encode info about both slice and set indices for comparison */
   int slice_index = libtea_get_cache_slice(instance, paddr);
   int set_index = libtea_get_cache_set(instance, paddr);
 
@@ -170,15 +169,12 @@ libtea_inline bool find_congruent_addresses(libtea_instance* instance, size_t in
   while (addr < number_of_addresses) {
       *current = addr + 1;
       size_t physical = libtea_get_physical_address(instance, (size_t)current);
-      if (physical == SIZE_MAX) {
-        return false;
-      }
       if (libtea__eviction_get_lookup_index(instance, physical) == index && physical != paddr) {
           instance->eviction->congruent_address_cache[index].congruent_virtual_addresses[addr] = current;
           addr++;
       }
 
-      current += 4096;		/* += 92 also seems to find a match quickly */
+      current += 4096;
   }
 
   if (addr != number_of_addresses) {
@@ -235,7 +231,7 @@ libtea_inline static int libtea_init_cache(libtea_instance* instance) {
     return LIBTEA_ERROR;
   }
   instance->physical_memory = (size_t) info.totalram * (size_t) info.mem_unit;
-
+  
   #else
   MEMORYSTATUSEX memory_status;
   memory_status.dwLength = sizeof(memory_status);
@@ -308,7 +304,7 @@ libtea_inline static int libtea_init_cache(libtea_instance* instance) {
     printf("* LLC: %d sets, %d ways, %d slices (line size: %d)\n", instance->llc_sets, instance->llc_ways, instance->llc_slices, instance->llc_line_size);
     printf("* Cache hit/miss threshold: [%d, %d]\n", instance->llc_hit_threshold, instance->llc_miss_threshold);
     printf("* CPU: %d physical / %d logical cores, %s, architecture: 0x%x, %s\n", instance->physical_cores, instance->logical_cores, instance->is_intel ? "Intel" : "Non-Intel", instance->cpu_architecture, instance->has_tm ? "with transactional memory support" : "no transactional memory support");
-
+    
     #if LIBTEA_LINUX
     printf("* Memory: %zd bytes / Memory map @ 0x%zx\n", instance->physical_memory, instance->direct_physical_map);
     #else
@@ -317,7 +313,7 @@ libtea_inline static int libtea_init_cache(libtea_instance* instance) {
 
     printf("\n");
   }
-
+    
   if (instance_count == 0) {
     atexit(libtea__cleanup_all);  /* Triggers cleanup later at exit, not now */
   }
@@ -341,26 +337,28 @@ libtea_inline int libtea_flush_reload(libtea_instance* instance, void* addr) {
 
 
 libtea_inline void libtea_calibrate_flush_reload(libtea_instance* instance) {
-  size_t reload_time = 0, flush_reload_time = 0, i, count = 1000000;
-  size_t dummy[16];
-  size_t *ptr = dummy + 8;
-  *ptr = 2;     /* touch mem */
+  size_t reload_time = 0, flush_reload_time = 0, i, count = 4096*8*10;
+  size_t dummy[4096*8];
+  size_t* ptr = dummy;
 
   libtea_access(ptr);
+  sched_yield();
   for (i = 0; i < count; i++) {
     libtea_measure_start(instance);
-    libtea_access(ptr);
+    libtea_access(ptr + (64 * i) % (4096*8));
     reload_time += libtea_measure_end(instance);
+    sched_yield();
   }
   for (i = 0; i < count; i++) {
+    libtea_flush_b(ptr + (64 * i) % (4096*8));
+    sched_yield();
     libtea_measure_start(instance);
-    libtea_access(ptr);
+    libtea_access(ptr + (64 * i) % (4096*8));
     flush_reload_time += libtea_measure_end(instance);
-    libtea_flush_b(ptr);
+    sched_yield();
   }
   reload_time /= count;
   flush_reload_time /= count;
-
   if(!getenv("LIBTEA_HIT_THRESHOLD")){
     instance->llc_hit_threshold = 0;      /* There is no need to have a hit threshold on most systems */
   }
@@ -370,7 +368,6 @@ libtea_inline void libtea_calibrate_flush_reload(libtea_instance* instance) {
 }
 
 
-// See "Reverse Engineering Intel Last-Level Cache Complex Addressing Using Performance Counters" by Maurice et al
 libtea_inline int libtea_get_cache_slice(libtea_instance* instance, size_t paddr) {
 
   if(!instance->is_intel){
@@ -413,13 +410,10 @@ libtea_inline int libtea_get_cache_set(libtea_instance* instance, size_t paddr) 
   return (paddr & instance->llc_set_mask) >> libtea__log_2(instance->llc_line_size);
 }
 
+
 libtea_inline int libtea_build_eviction_set(libtea_instance* instance, libtea_eviction_set* set, size_t paddr) {
   if (instance->eviction == NULL || instance->eviction == 0) {
-    bool init_success = libtea__eviction_init(instance);
-    if (!init_success) {
-      libtea_info("Failed to initialize eviction support");
-      return LIBTEA_ERROR;
-    }
+    libtea__eviction_init(instance);
   }
 
   set->addresses = instance->eviction_strategy.S + instance->eviction_strategy.C + instance->eviction_strategy.D;
@@ -428,7 +422,6 @@ libtea_inline int libtea_build_eviction_set(libtea_instance* instance, libtea_ev
   size_t index = libtea__eviction_get_lookup_index(instance, paddr);
 
   if (find_congruent_addresses(instance, index, paddr, set->addresses) == false) {
-    libtea_info("Failed to find congruent addresses");
     return LIBTEA_ERROR;
   }
 
@@ -437,8 +430,9 @@ libtea_inline int libtea_build_eviction_set(libtea_instance* instance, libtea_ev
   return LIBTEA_SUCCESS;
 }
 
+
 libtea_inline int libtea_build_eviction_set_vaddr(libtea_instance* instance, libtea_eviction_set* set, size_t vaddr) {
-  size_t paddr = libtea_get_physical_address(instance, vaddr);
+  size_t paddr = libtea_get_physical_address(instance, (size_t)vaddr);
   return libtea_build_eviction_set(instance, set, paddr);
 }
 
@@ -455,7 +449,7 @@ libtea_inline void libtea_evict(libtea_instance* instance, libtea_eviction_set s
 }
 
 
-libtea_inline int libtea_evict_reload(libtea_instance* instance, void* addr, libtea_eviction_set set) {
+libtea_inline int libtea_evict_reload(libtea_instance* instance, void* addr, libtea_eviction_set set) { 
   libtea_measure_start(instance);
   libtea_access(addr);
   int time = (int)libtea_measure_end(instance);
@@ -468,14 +462,11 @@ libtea_inline int libtea_evict_reload(libtea_instance* instance, void* addr, lib
 libtea_inline void libtea_calibrate_evict_reload(libtea_instance* instance) {
   size_t reload_time = 0, evict_reload_time = 0, i, count = 1000000;
   size_t dummy[16];
-  size_t* ptr = dummy + 8;
-  *ptr = 2; 	/* touch mem */
+  size_t *ptr = dummy + 8;
 
+  *ptr = 2;
   libtea_eviction_set ev;
-  if(libtea_build_eviction_set_vaddr(instance, &ev, (size_t)ptr) == LIBTEA_ERROR) {
-    libtea_info("Error building eviction set");
-    return;
-  }
+  if(libtea_build_eviction_set_vaddr(instance, &ev, (size_t)ptr)) return;
 
   libtea_access(ptr);
   for (i = 0; i < count; i++) {
@@ -516,8 +507,7 @@ libtea_inline int libtea_prime_probe(libtea_instance* instance, libtea_eviction_
 }
 
 
-// See "Reverse Engineering Intel Last-Level Cache Complex Addressing Using Performance Counters" by Maurice et al
-libtea_inline size_t libtea_measure_slice(libtea_instance* instance, int cpu, void* address) {
+libtea_inline size_t libtea_measure_slice(libtea_instance* instance, void* address) {
 
   if(!instance->is_intel){
     libtea_info("libtea_measure_slice is only supported on Intel CPUs. The returned value will be incorrect.");
@@ -527,7 +517,7 @@ libtea_inline size_t libtea_measure_slice(libtea_instance* instance, int cpu, vo
   int msr_unc_perf_global_ctr;
   int val_enable_ctrs;
   if(instance->cpu_architecture >= 0x16) {
-    /* Skylake or newer */
+    /* Skylake or newer */   
     msr_unc_perf_global_ctr = 0xe01;
     val_enable_ctrs = 0x20000000;
   }
@@ -535,24 +525,24 @@ libtea_inline size_t libtea_measure_slice(libtea_instance* instance, int cpu, vo
     msr_unc_perf_global_ctr = 0x391;
     val_enable_ctrs = 0x2000000f;
   }
-
+    
   /* Disable counters */
-  if(libtea_write_system_reg(instance, cpu, msr_unc_perf_global_ctr, 0x0)) {
+  if(libtea_write_system_reg(instance, 0, msr_unc_perf_global_ctr, 0x0)) {
     return -1ull;
   }
 
   /* Reset counters */
   for (int i = 0; i < instance->llc_slices; i++) {
-    libtea_write_system_reg(instance, cpu, 0x706 + i * 0x10, 0x0);
+    libtea_write_system_reg(instance, 0, 0x706 + i * 0x10, 0x0);
   }
 
   /* Select event to monitor */
   for (int i = 0; i < instance->llc_slices; i++) {
-    libtea_write_system_reg(instance, cpu, 0x700 + i * 0x10, 0x408f34);
+    libtea_write_system_reg(instance, 0, 0x700 + i * 0x10, 0x408f34);
   }
 
   /* Enable counting */
-  if(libtea_write_system_reg(instance, cpu, msr_unc_perf_global_ctr, val_enable_ctrs)) {
+  if(libtea_write_system_reg(instance, 0, msr_unc_perf_global_ctr, val_enable_ctrs)) {
     return -1ull;
   }
 
@@ -565,14 +555,9 @@ libtea_inline size_t libtea_measure_slice(libtea_instance* instance, int cpu, vo
   /* Read counter */
   size_t* cboxes = (size_t*) malloc(sizeof(size_t) * instance->llc_slices);
   for (int i = 0; i < instance->llc_slices; i++) {
-    cboxes[i] = libtea_read_system_reg(instance, cpu, 0x706 + i * 0x10);
+    cboxes[i] = libtea_read_system_reg(instance, 0, 0x706 + i * 0x10);
   }
   free(cboxes);
-
-  /* Disable counters again now we're done */
-  if(libtea_write_system_reg(instance, cpu, msr_unc_perf_global_ctr, 0x0)) {
-    return -1ull;
-  }
 
   return libtea_find_index_of_nth_largest_sizet(cboxes, instance->llc_slices, 0);
 }

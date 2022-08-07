@@ -30,7 +30,7 @@ int main(int argc, char **argv){
   libtea_access(addr);
 
   for(int i=0; i<5; i++){
-    /* On first iteration we don't manually set the timer to test if it's initialized to a valid value */
+    // Use i==0 as a warmup iteration
     if(i==1){
       libtea_info("Testing with native timer...");
       libtea_set_timer(instance, LIBTEA_TIMER_NATIVE);
@@ -45,7 +45,7 @@ int main(int argc, char **argv){
     }
     else if(i==4){
       libtea_set_timer(instance, LIBTEA_TIMER_MONOTONIC_CLOCK);
-      libtea_info("Testing with counting thread...");
+      libtea_info("Testing with monotonic clock...");
     }
 
     libtea_speculation_barrier();
@@ -55,7 +55,7 @@ int main(int argc, char **argv){
     timestamp = libtea_timestamp(instance);
     libtea_measure_end(instance);
     libtea_barrier_end();
-    libtea_info("Timestamp is %" PRIu64 "", timestamp);
+    if (i != 0) libtea_info("Timestamp is %" PRIu64 "", timestamp);
 
     libtea_speculation_barrier();
     libtea_barrier_start();
@@ -63,7 +63,7 @@ int main(int argc, char **argv){
     libtea_access(addr);
     timestamp = libtea_measure_end(instance);
     libtea_barrier_end();
-    libtea_info("Cache hit time with libtea_measure_end is %" PRIu64 "", timestamp);
+    if (i != 0) libtea_info("Cache hit time with libtea_measure_end is %" PRIu64 "", timestamp);
 
     libtea_flush(addr);
     libtea_speculation_barrier();
@@ -72,14 +72,14 @@ int main(int argc, char **argv){
     libtea_access(addr);
     timestamp = libtea_measure_end(instance);
     libtea_barrier_end();
-    libtea_info("Cache miss time is %" PRIu64 "", timestamp);
+    if (i != 0) libtea_info("Cache miss time is %" PRIu64 "", timestamp);
 
     libtea_speculation_barrier();
     libtea_measure_start(instance);
     libtea_access_b(addr);
     timestamp = libtea_measure_end(instance);
     libtea_speculation_barrier();
-    libtea_info("Cache hit time (barrier) is %" PRIu64 "", timestamp);
+    if (i != 0) libtea_info("Cache hit time (barrier) is %" PRIu64 "", timestamp);
 
     libtea_flush_b(addr);
     libtea_speculation_barrier();
@@ -87,14 +87,13 @@ int main(int argc, char **argv){
     libtea_access_b(addr);
     timestamp = libtea_measure_end(instance);
     libtea_speculation_barrier();
-    libtea_info("Cache miss time (barrier) is %" PRIu64 "\n", timestamp);
+    if (i != 0) libtea_info("Cache miss time (barrier) is %" PRIu64 "\n", timestamp);
 
   }
 
   libtea_timestamp(instance);
 
-  /* Success criteria: application didn't crash! Manually check timings are plausible */
-  libtea_info("Test 1 passed.\n\n");
+  libtea_info("Test 1 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -134,8 +133,7 @@ int main(int argc, char **argv){
   libtea_info("Skipping specpoline test because inline assembly is not supported by this compiler.");
   #endif
 
-  /* Success criteria: application didn't crash! */
-  libtea_info("Test 2 passed.\n\n");
+  libtea_info("Test 2 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -176,8 +174,7 @@ int main(int argc, char **argv){
 
   #endif
 
-  /* Success criteria: didn't crash, actually running on the core we requested */
-  libtea_info("Test 3 passed.\n\n");
+  libtea_info("Test 3 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -208,11 +205,10 @@ int main(int argc, char **argv){
   int ret = libtea_write_system_reg(instance, cpu, msr, msr_val);
   libtea_info("Read and wrote system register fine, value was 0x%zx", msr_val);
 
-  /* Success criteria: didn't crash */
   #if LIBTEA_PPC64
   skip_msr:
   #endif
-  libtea_info("Test 4 passed.\n\n");
+  libtea_info("Test 4 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -242,6 +238,11 @@ int main(int argc, char **argv){
     libtea_info("Test 5 failed: could not map test-basic.c (without offset)");
     goto libtea_test_basic_cleanup;
   }
+  printf("\nFirst 50 chars of mapped file test-basic.c: ");
+  for (int i=0; i<50; i++) {
+    printf("%c", ((char*)mapped_file)[i]);
+  }
+  printf("\n");
   libtea_munmap_file(mapped_file, filesize, &fd, &windowsHandle);
 
   #if LIBTEA_LINUX
@@ -251,6 +252,11 @@ int main(int argc, char **argv){
     libtea_info("Test 5 failed: could not map test-basic.c (with offset)");
     goto libtea_test_basic_cleanup;
   }
+  printf("\nFirst 50 chars of mapped file test-basic.c from offset 4096: ");
+  for (int i=0; i<50; i++) {
+    printf("%c", ((char*)mapped_file)[i]);
+  }
+  printf("\n");
   libtea_munmap_file(mapped_file, filesize, &fd, &windowsHandle);
   #endif
 
@@ -275,8 +281,7 @@ int main(int argc, char **argv){
     goto libtea_test_basic_cleanup;
   }
 
-  /* Success criteria: didn't crash, manual sanity check? */
-  libtea_info("Test 5 passed.\n\n");
+  libtea_info("Test 5 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -285,8 +290,7 @@ int main(int argc, char **argv){
   libtea_enable_hardware_prefetchers(instance);
   libtea_disable_hardware_prefetchers(instance);
 
-  /* Success criteria: application didn't crash! */
-  libtea_info("Test 6 passed.\n\n");
+  libtea_info("Test 6 complete.\n");
 
   // ---------------------------------------------------------------------------
 

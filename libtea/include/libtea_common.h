@@ -36,7 +36,7 @@ extern "C" {
 #include <linux/perf_event.h>
 #include <pthread.h>
 #include <sched.h>
-#include <sys/fcntl.h> 
+#include <sys/fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
@@ -73,7 +73,7 @@ typedef size_t pid_t;
 #if defined(_MSC_VER) && (!defined(MOZJS_MAJOR_VERSION) || MOZJS_MAJOR_VERSION < 63)   /* If using Visual Studio C++ compiler. We have to explicitly exclude Firefox after MOZJS v63 as they began using clang-cl */
 #define libtea_inline __forceinline
 #else                                                                                  /* Assume using GCC, MinGW GCC, or Clang */
-#define libtea_inline inline __attribute__((always_inline,flatten))                    /* Assume using GCC */                                    
+#define libtea_inline inline __attribute__((always_inline,flatten))                    /* Assume using GCC */
 #define LIBTEA_INLINEASM 1
 #endif
 
@@ -498,7 +498,7 @@ libtea_inline void libtea_pin_to_core(libtea_thread process, int core);
  *
  * :param instance: The libtea instance
  * :param addr: The virtual address
- * :return: The corresponding physical address or LIBTEA_ERROR
+ * :return: The corresponding physical address or SIZE_MAX
  */
 libtea_inline size_t libtea_get_physical_address(libtea_instance* instance, size_t addr);
 
@@ -673,7 +673,7 @@ libtea_inline int libtea_write_system_reg(libtea_instance* instance, int cpu, ui
  * :param instance: The libtea instance
  * :param cpu: The core ID
  * :param reg: The register
- * :return: The value of the register or LIBTEA_ERROR
+ * :return: The value of the register or SIZE_MAX
  */
 libtea_inline size_t libtea_read_system_reg(libtea_instance* instance, int cpu, uint32_t reg);
 

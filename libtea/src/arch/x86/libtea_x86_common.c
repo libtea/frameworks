@@ -330,15 +330,17 @@ int libtea__arch_write_system_reg(libtea_instance* instance, int cpu, uint32_t r
   #if LIBTEA_LINUX
   char msr_file_name[64];
   sprintf(msr_file_name, "/dev/cpu/%d/msr", cpu);
-  
+
   int fd = open(msr_file_name, O_WRONLY);
   if(fd < 0) {
+    libtea_info("msr driver not loaded, will try with Libtea driver.");
     goto libtea_write_system_reg_driver;
   }
-  
+
   if(pwrite(fd, &val, sizeof(val), reg) != sizeof(val)) {
       close(fd);
-      goto libtea_write_system_reg_driver;
+      libtea_info("Failed to read MSR with msr driver!");
+      return LIBTEA_ERROR;
   }
 
   close(fd);
@@ -354,10 +356,10 @@ int libtea__arch_write_system_reg(libtea_instance* instance, int cpu, uint32_t r
       libtea_info("Either the msr driver or the Libtea driver must be loaded to read and write system registers.");
       return LIBTEA_ERROR;
     }
-    
-    #if LIBTEA_LINUX 
+
+    #if LIBTEA_LINUX
     ioctl(instance->module_fd, LIBTEA_IOCTL_SET_SYSTEM_REG, cpu, reg, val);
-    
+
     #else
     DWORD returnLength;
     libtea_system_reg msr_info;
@@ -377,15 +379,17 @@ size_t libtea__arch_read_system_reg(libtea_instance* instance, int cpu, uint32_t
   size_t data = 0;
   char msr_file_name[64];
   sprintf(msr_file_name, "/dev/cpu/%d/msr", cpu);
-  
+
   int fd = open(msr_file_name, O_RDONLY);
   if(fd < 0) {
+    libtea_info("msr driver not loaded, will try with libtea driver.");
     goto libtea_read_system_reg_driver;
   }
-  
+
   if(pread(fd, &data, sizeof(data), reg) != sizeof(data)) {
       close(fd);
-      goto libtea_read_system_reg_driver;
+      libtea_info("Failed to read MSR with msr driver!");
+      return SIZE_MAX;		// Cannot return LIBTEA_ERROR as size_t is unsigned
   }
   close(fd);
   return data;
@@ -394,21 +398,21 @@ size_t libtea__arch_read_system_reg(libtea_instance* instance, int cpu, uint32_t
   #if LIBTEA_LINUX
   libtea_read_system_reg_driver:
     if(instance->module_fd <= 0){
-    #else 
+    #else
     if(instance->module_fd == NULL){
     #endif
       libtea_info("Either the msr driver or the libtea driver must be loaded to read and write system registers.");
-      return LIBTEA_ERROR;
+      return SIZE_MAX;
     }
-    
-    #if LIBTEA_LINUX 
+
+    #if LIBTEA_LINUX
     libtea_system_reg msr_info;
     msr_info.cpu = cpu;
     msr_info.reg = reg;
     msr_info.val = 0;
     ioctl(instance->module_fd, LIBTEA_IOCTL_GET_SYSTEM_REG, &msr_info);
     return msr_info.val;
-    
+
     #else
     DWORD returnLength;
     libtea_system_reg msr_info;

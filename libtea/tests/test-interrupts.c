@@ -56,7 +56,7 @@ int main(int argc, char **argv){
     goto libtea_test_interrupts_cleanup;
   }
 
-  libtea_info("Test 1 passed.\n\n");
+  libtea_info("Test 1 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -80,7 +80,7 @@ int main(int argc, char **argv){
     goto libtea_test_interrupts_cleanup;
   }
 
-  libtea_info("Test 2 passed.\n\n");
+  libtea_info("Test 2 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -92,7 +92,7 @@ int main(int argc, char **argv){
     libtea_info("Test 3 failed: expected the custom interrupt handler to run once, but was run %d times.", libtea_ss_irq_count);
   }
 
-  libtea_info("Test 3 passed.\n\n");
+  libtea_info("Test 3 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -111,7 +111,7 @@ int main(int argc, char **argv){
     libtea_info("Test 4 failed: expected the custom interrupt handler to run once, but was run %d times.", libtea_ss_irq_count);
   }
 
-  libtea_info("Test 4 passed.\n\n");
+  libtea_info("Test 4 complete.\n");
 
   // ---------------------------------------------------------------------------
 
@@ -124,7 +124,7 @@ int main(int argc, char **argv){
   }
   libtea_apic_timer_deadline(instance);
 
-  libtea_info("Test 5 passed.\n\n");
+  libtea_info("Test 5 complete.\n");
 
   // ---------------------------------------------------------------------------
 
